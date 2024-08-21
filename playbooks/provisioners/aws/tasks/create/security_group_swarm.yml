@@ -1,0 +1,31 @@
+---
+- name: "Create EC2 security group {{ aws_swarm_security_group_name }} for control plane connections between Docker Swarm nodes."
+  amazon.aws.ec2_security_group:
+    name: "{{ aws_swarm_security_group_name }}"
+    description: >-
+      Allow communication between the swarm nodes.
+    state: present
+    vpc_id: "{{ my_vpc.vpc.id }}"
+    rules:
+      - proto: tcp
+        from_port: 2377
+        to_port: 2377
+        group_name: "{{ aws_swarm_security_group_name }}"
+        rule_desc: "Cluster management communications."
+      - proto: tcp
+        from_port: 7946
+        to_port: 7946
+        group_name: "{{ aws_swarm_security_group_name }}"
+        rule_desc: "Communication among nodes."
+      - proto: udp
+        from_port: 7946
+        to_port: 7946
+        group_name: "{{ aws_swarm_security_group_name }}"
+        rule_desc: "Communication among nodes."
+      - proto: udp
+        from_port: 4789
+        to_port: 4789
+        group_name: "{{ aws_swarm_security_group_name }}"
+        rule_desc: "Overlay network traffic."
+    tags:
+      Name: "{{ aws_swarm_security_group_name }}"

@@ -1,0 +1,13 @@
+---
+plugin: amazon.aws.aws_ec2
+filters:
+  instance-state-name: running
+  tag:SwarmType:
+    - manager
+    - worker
+hostnames:
+  - ip-address
+keyed_groups:
+  - prefix: swarm
+    key: tags.SwarmType
+

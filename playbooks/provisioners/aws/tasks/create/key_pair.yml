@@ -1,0 +1,40 @@
+---
+- name: "Trying to create a key pair named {{ aws_key_pair_name}}."
+  amazon.aws.ec2_key:
+    name: "{{ aws_key_pair_name }}"
+    force: false  # If it exists, do not overwrite
+  no_log: true
+  register: aws_ec2_key_pair
+  ignore_errors: yes # Do not stop the playbook if this fails
+
+- debug: var=aws_ec2_key_pair
+
+- name: "Saving private key to {{ aws_key_pair_local_path }}."
+  ansible.builtin.copy:
+    dest: "{{ aws_key_pair_local_path }}"
+    content: "{{ aws_ec2_key_pair['key']['private_key'] }}"
+    mode: '0600'
+    force: false
+  register: aws_ec2_key_saved
+  when: aws_ec2_key_pair.changed == true
+  ignore_errors: yes
+
+- name: "Ensure private key exists locally {{ aws_key_pair_local_path }}."
+  ansible.builtin.stat:
+    path: "{{ aws_key_pair_local_path }}"
+  register: aws_ec2_file_exists
+
+- name: "Deleting {{ aws_key_pair_name }} since it couldn't be saved."
+  amazon.aws.ec2_key:
+    name: "{{ aws_key_pair_name }}"
+    state: absent
+  when: not aws_ec2_file_exists.stat.exists or (aws_ec2_key_pair.changed == true and aws_ec2_key_saved.changed == false)
+  register: delete_key_pair
+
+- name: "Failed to create key pair"
+  ansible.builtin.fail:
+    msg: >
+      The file {{ aws_key_pair_local_path }} already exists but the
+      key pair {{ aws_key_pair_name }} doesn't exists on AWS.
+      Change either the aws_key_pair_name or the aws_key_pair_local_path
+  when: delete_key_pair.changed == true

@@ -1,0 +1,82 @@
+---
+- name: Install and config Docker in Ubuntu
+  hosts:
+    - swarm_manager
+    - swarm_worker
+  become: true
+  vars_files:
+    - ../../settings.yml
+
+  tasks:
+    # REFERENCE: https://docs.docker.com/engine/install/ubuntu/
+    - name: Ensure old versions of Docker are not installed.
+      apt:
+        name:
+          - "docker.io"
+          - "docker-compose"
+          - "docker-compose-v2"
+          - "docker-doc"
+          - "podman-docker"
+        state: absent
+
+    - name: Ensure Python packages are installed.
+      pip:
+        name:
+          - docker
+          - jsondiff
+        state: latest
+
+    #    - name: Add Docker GPG apt Key
+    #      apt_key:
+    #        url: "https://download.docker.com/linux/ubuntu/gpg"
+    #        state: present
+
+    - name: Install keyrings directory.
+      command: install -m 0755 -d /etc/apt/keyrings
+      become: true
+
+    - name: Add Docker apt key.
+      get_url:
+        url: "https://download.docker.com/linux/ubuntu/gpg"
+        dest: "/etc/apt/keyrings/docker.asc"
+        mode: '0644'
+        force: false
+        checksum: "sha256:1500c1f56fa9e26b9b8f42452a553675796ade0807cdce11975eb98170b3a570"
+      register: add_repository_key
+      ignore_errors: true
+
+    - name: Add Docker Repository
+      apt_repository:
+        repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        state: present
+        update_cache: true
+
+    - name: Install Docker
+      apt:
+        name:
+          - "docker-ce"
+          - "docker-ce-cli"
+          - "containerd.io"
+          - "docker-buildx-plugin"
+          - "docker-compose-plugin"
+        state: present
+        update_cache: true
+
+    - name: Create group docker
+      ansible.builtin.group:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - docker
+
+    - name: Add user to new docker group
+      user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: yes
+
+    - name: Start Docker service
+      service:
+        name: docker
+        state: started
+        enabled: true

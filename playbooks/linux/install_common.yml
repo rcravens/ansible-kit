@@ -1,0 +1,46 @@
+---
+- name: Install and configure common packages in Ubuntu
+  hosts:
+    - swarm_manager
+    - swarm_worker
+  gather_facts: no
+  become: true
+  vars_files:
+    - ../../settings.yml
+
+  tasks:
+    - name: Wait for connections while instances while they spin up.
+      ansible.builtin.wait_for_connection:
+        timeout: 300
+
+    - name: Gathering facts
+      ansible.builtin.setup:
+
+    - name: Update all packages
+      apt:
+        update_cache: yes
+        force_apt_get: yes
+        #cache_valid_time: 3600
+
+    - name: Install desired system packages
+      apt:
+        pkg:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - cron
+          - fail2ban
+          - software-properties-common
+          - python3-minimal
+          - python3-pip
+          - python3-setuptools
+          - wget
+          - zip
+          - awscli
+        state: present
+
+    - name: Ensure Python system warning is removed.
+      file:
+        path: /usr/lib/python3.12/EXTERNALLY-MANAGED
+        state: absent

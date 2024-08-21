@@ -1,0 +1,9 @@
+.git
+.vscode
+.gitignore
+inventory
+settings.yml
+Makefile
+README.md
+README.txt
+Dockerfile

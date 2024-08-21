@@ -1,0 +1,41 @@
+---
+- name: "Create VPC {{ aws_vpc_name }} | {{ aws_vpc_cidr_block }}"
+  amazon.aws.ec2_vpc_net:
+    name: "{{ aws_vpc_name }}"
+    cidr_block: "{{ aws_vpc_cidr_block }}"
+    region: "{{ aws_region }}"
+    tags:
+      Name: "{{ aws_vpc_name }}"
+    state: present
+  register: my_vpc
+
+- name: "Create internet gateway for VPC ( {{ my_vpc.vpc.id }} )"
+  amazon.aws.ec2_vpc_igw:
+    vpc_id: "{{ my_vpc.vpc.id }}"
+    region: "{{ aws_region }}"
+    tags:
+      Name: "{{ aws_igw_name }}"
+    state: present
+  register: igw
+
+- name: "Create subnet for VPC ( {{ my_vpc.vpc.id }} )"
+  amazon.aws.ec2_vpc_subnet:
+    state: present
+    vpc_id: "{{ my_vpc.vpc.id }}"
+    cidr: "{{ aws_subnet_cidr_block  }}"
+    region: "{{ aws_region }}"
+    map_public: yes
+    tags:
+      Name: "{{ aws_subnet_name }}"
+  register: my_subnet
+
+- name: "Create gateway route table for this VPC ( {{ my_vpc.vpc.id }} )"
+  amazon.aws.ec2_vpc_route_table:
+    vpc_id: "{{ my_vpc.vpc.id }}"
+    tags:
+      Name: "{{ aws_route_table_name }}"
+    subnets: [ "{{ my_subnet.subnet.id }}" ]
+    routes:
+      - dest: "0.0.0.0/0"
+        gateway_id: "{{ igw.gateway_id }}"
+  register: gateway_rt

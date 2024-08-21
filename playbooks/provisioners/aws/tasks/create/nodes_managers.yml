@@ -1,0 +1,26 @@
+---
+- name: "Provision Docker Swarm manager EC2 instances."
+  amazon.aws.ec2_instance:
+    key_name: "{{ aws_key_pair_name }}"
+    image_id: "{{ aws_ami }}"
+    instance_type: "{{ aws_default_instance_type }}"
+    vpc_subnet_id: "{{ my_subnet.subnet.id }}"
+    iam_instance_profile: "{{ aws_iam_role_name }}"
+    network:
+      assign_public_ip: yes
+    security_groups: "{{ aws_ec2_security_groups }}"
+    tags: "{{ aws_ec2_manager_tags }}"
+    wait: yes
+    exact_count: 1
+  register: swarm_managers
+
+# - name: Debug Swarm Managers. 
+#   debug:
+#     var: swarm_managers
+
+- name: "Add Docker Swarm managers nodes to 'swarm_manager' inventory group."
+  add_host:
+    hostname: "{{ item.public_ip_address }}"
+    groups:
+      - swarm_manager
+  with_items: "{{ swarm_managers.instances }}"
