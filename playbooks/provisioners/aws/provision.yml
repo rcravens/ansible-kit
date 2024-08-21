@@ -6,7 +6,6 @@
     - ../../../settings.yml
 
   tasks:
-    - debug: var=aws_igw_name
     - name: Create VPC and subnet
       include_tasks: tasks/create/vpc.yml
 
