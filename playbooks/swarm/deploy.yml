@@ -1,8 +1,6 @@
 ---
 - hosts: swarm_manager[0]
   become: true
-  vars_files:
-    - ../../settings.yml
   vars:
     - is_ecr_login_needed: false
 
@@ -21,8 +19,9 @@
         recurse: no  # To find items in subdirectories as well
       register: stack_files
       delegate_to: localhost
+      become: false
 
-    #    - debug: var=stack_files
+    - debug: var=stack_files
 
     - name: Copying localhost stack files to the manager node.
       copy:
@@ -49,9 +48,13 @@
     - name: Deploy or redeploy the stacks to Docker Swarm.
       docker_stack:
         state: present
-        name: "{{ app_name }}"
+        name: "{{ item.path | basename | regex_replace(regex, replace) }}"
         with_registry_auth: "{{ item.path == 'stacks/app.yml' and (aws_account_id|d(false)) and aws_account_id is defined and (aws_account_id|length > 0) }}"
         compose:
           - "/home/{{ ansible_user }}/stacks/{{ item.path | basename }}"
       loop: "{{ stack_files.files }}"
-
+      vars:
+        regex: >-
+          ^([^\.]*).*
+        replace: >-
+          \1
