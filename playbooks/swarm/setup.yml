@@ -8,6 +8,7 @@
         - name: Initiating the swarm with default parameters
           community.docker.docker_swarm:
             state: present
+            advertise_addr: ansible_private_ip
           register: init_swarm
 
         - name: "set fact: join token worker"
