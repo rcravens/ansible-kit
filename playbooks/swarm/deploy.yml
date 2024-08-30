@@ -2,7 +2,7 @@
 - hosts: swarm_manager[0]
   become: true
   vars:
-    - is_ecr_login_needed: false
+    - is_ecr_login_needed: true
 
   tasks:
     - name: Ensure stacks directory exists on manager node.
