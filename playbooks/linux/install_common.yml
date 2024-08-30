@@ -5,8 +5,6 @@
     - swarm_worker
   gather_facts: no
   become: true
-  vars_files:
-    - ../../settings.yml
 
   tasks:
     - name: Wait for connections while instances while they spin up.

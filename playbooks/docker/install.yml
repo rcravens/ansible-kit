@@ -4,8 +4,6 @@
     - swarm_manager
     - swarm_worker
   become: true
-  vars_files:
-    - ../../settings.yml
 
   tasks:
     # REFERENCE: https://docs.docker.com/engine/install/ubuntu/

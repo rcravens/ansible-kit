@@ -1,8 +1,6 @@
 ---
 - hosts: swarm_manager
   become: true
-  vars_files:
-    - ../../settings.yml
 
   tasks:
     - name: Setting Up The Swarm (docker swarm init)
@@ -39,8 +37,6 @@
 
 - hosts: swarm_worker
   become: true
-  vars_files:
-    - ../../settings.yml
 
   tasks:
     - name: Create IP Dictionary to Look Up Private IP Given Public.
