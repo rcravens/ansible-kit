@@ -1,0 +1,10 @@
+---
+- hosts:
+    - swarm_manager
+    - swarm_worker
+  become: true
+
+  tasks:
+    - name: Playing in the sandbox
+      debug: var="{{ item.ansible_all_ipv4_addresses | ansible.utils.ipaddr('private') }}"
+      with_items: "{{ groups.all }}"

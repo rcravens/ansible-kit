@@ -22,6 +22,7 @@
         name:
           - docker
           - jsondiff
+          - netaddr
         state: latest
 
     #    - name: Add Docker GPG apt Key

@@ -8,7 +8,6 @@
         - name: Initiating the swarm with default parameters
           community.docker.docker_swarm:
             state: present
-            advertise-addr: "{{ $(docker-machine ip node-1) }}"
           register: init_swarm
 
         - name: "set fact: join token worker"
