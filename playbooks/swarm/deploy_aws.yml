@@ -45,7 +45,7 @@
       docker_stack:
         state: present
         name: "{{ item.path | basename | regex_replace(regex, replace) }}"
-        with_registry_auth: "{{ item.path == 'stacks/app.yml' and (aws_account_id|d(false)) and aws_account_id is defined and (aws_account_id|length > 0) }}"
+        with_registry_auth: "{{ (aws_account_id|d(false)) and aws_account_id is defined and (aws_account_id|length > 0) }}"
         compose:
           - "/home/{{ ansible_user }}/stacks/{{ item.path | basename }}"
       loop: "{{ stack_files.files }}"
