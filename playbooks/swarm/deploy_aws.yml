@@ -1,8 +1,8 @@
 ---
 - hosts: swarm_manager[0]
   become: true
-  vars:
-    - is_ecr_login_needed: true
+  vars_files:
+    - ../../deploy_settings.yml
 
   tasks:
     - name: Ensure stacks directory exists on manager node.
@@ -33,13 +33,9 @@
         force: yes
       loop: "{{ stack_files.files }}"
 
-    - name: Determine if we need ECR credentials
-      set_fact:
-        is_ecr_login_needed: true
-      when: item.path == "stacks/app.yml" and (aws_account_id|d(false)) and aws_account_id is defined and (aws_account_id|length > 0)
-      loop: "{{ stack_files.files }}"
-
-    #    - debug: var=is_ecr_login_needed
+    - debug: var=is_ecr_login_needed
+    - debug: var=aws_region
+    - debug: var=aws_account_id
 
     - name: Create Docker credentials for ECR access.
       shell: "aws ecr get-login-password --region {{ aws_region }} | docker login --username AWS --password-stdin {{ aws_account_id }}.dkr.ecr.us-east-1.amazonaws.com"
