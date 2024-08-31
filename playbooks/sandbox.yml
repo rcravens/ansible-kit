@@ -1,16 +1,12 @@
 ---
-- name: Welcome to the SANDBOX!!!
-  hosts:
-    - swarm_manager
-    - swarm_worker
+- hosts: swarm_manager[0]
   become: true
-  gather_facts: true
+  vars_files:
+    - ../deploy_settings.yml
 
   tasks:
-    - name: List all the vars
-      debug: var=ansible_private_ip
-      with_items: "{{ groups.all }}"
-      run_once: true
+    - name: Create VPC and subnet
+      debug: var="tasks/deploy_{{ cloud_provider }}.yml"
 #
 #    - name: List all the vars
 #      debug: var="{{ hostvars[item].locally_reachable_ips.ipv4 | ansible.utils.ipaddr('private') | first }}"

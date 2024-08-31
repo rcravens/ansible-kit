@@ -1,0 +1,50 @@
+---
+- name: Ensure stacks directory exists on manager node.
+  file:
+    path: "/home/{{ ansible_user }}/stacks"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+
+- name: Find all the stack files (yml) in the localhost directory.
+  ansible.builtin.find:
+    paths: "stacks"
+    patterns: "*.yml"
+    recurse: no  # To find items in subdirectories as well
+  register: stack_files
+  delegate_to: localhost
+  become: false
+
+- debug: var=stack_files
+
+- name: Copying localhost stack files to the manager node.
+  copy:
+    src: "{{ item.path }}"
+    dest: "/home/{{ ansible_user }}/stacks/{{ item.path | basename }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: u=rw,g=rw,o=r
+    force: yes
+  loop: "{{ stack_files.files }}"
+
+- debug: var=is_ecr_login_needed
+- debug: var=aws_region
+- debug: var=aws_account_id
+
+- name: Create Docker credentials for ECR access.
+  shell: "aws ecr get-login-password --region {{ aws_region }} | docker login --username AWS --password-stdin {{ aws_account_id }}.dkr.ecr.us-east-1.amazonaws.com"
+  when: is_ecr_login_needed
+
+- name: Deploy or redeploy the stacks to Docker Swarm.
+  docker_stack:
+    state: present
+    name: "{{ item.path | basename | regex_replace(regex, replace) }}"
+    with_registry_auth: "{{ (aws_account_id|d(false)) and aws_account_id is defined and (aws_account_id|length > 0) }}"
+    compose:
+      - "/home/{{ ansible_user }}/stacks/{{ item.path | basename }}"
+  loop: "{{ stack_files.files }}"
+  vars:
+    regex: >-
+      ^([^\.]*).*
+    replace: >-
+      \1
