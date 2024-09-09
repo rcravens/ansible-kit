@@ -1,12 +1,14 @@
 ---
-- hosts: swarm_manager[0]
+- hosts: swarm_manager
   become: true
+  gather_facts: false
   vars_files:
     - ../deploy_settings.yml
 
   tasks:
     - name: Create VPC and subnet
-      debug: var="tasks/deploy_{{ cloud_provider }}.yml"
+      debug: var=ansible_ssh_common_args
+
 #
 #    - name: List all the vars
 #      debug: var="{{ hostvars[item].locally_reachable_ips.ipv4 | ansible.utils.ipaddr('private') | first }}"
