@@ -9,18 +9,4 @@
     - name: Create VPC and subnet
       debug: var=ansible_ssh_common_args
 
-#
-#    - name: List all the vars
-#      debug: var="{{ hostvars[item].locally_reachable_ips.ipv4 | ansible.utils.ipaddr('private') | first }}"
-#      with_items: "{{ groups.all }}"
-#      run_once: true
-#
-#    - name: Debug IP addresses using with_items
-#      debug: msg="{{item}}- {{hostvars[item].ansible_default_ipv4.address}} "
-#      with_items: "{{ groups.all }}"
-#      run_once: true
 
-#    - name: Playing in the sandbox
-#      debug: var="{{ hostvars[item].ansible_all_ipv4_addresses | ansible.utils.ipaddr('private') }}"
-#      with_items: "{{ groups.all }}"
-#      run_once: true

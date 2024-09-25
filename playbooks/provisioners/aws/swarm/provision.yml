@@ -3,7 +3,7 @@
   connection: local
   gather_facts: false
   vars_files:
-    - ../../../../deploy_settings.yml
+    - ../../../../swarm_settings.yml
 
   tasks:
     - debug: var=resource_prefix
@@ -12,11 +12,11 @@
     # VPC
     - name: Create VPC
       amazon.aws.ec2_vpc_net:
-        name: "{{resource_prefix}}-vpc"
+        name: "{{vpc.name}}"
         cidr_block: "{{vpc.cidr}}"
         region: "{{vpc.region}}"
         tags:
-          Name: "{{resource_prefix}}-vpc"
+          Name: "{{vpc.name}}"
         state: present
       register: my_vpc
 
@@ -30,7 +30,7 @@
         az: "{{item.az}}"
         vpc_id: "{{ my_vpc.vpc.id }}"
         tags:
-          Name: "{{resource_prefix}}-vpc-{{item.name}}"
+          Name: "{{item.name}}"
       register: my_subnets
       with_items:
         - "{{vpc.subnets.public}}"
@@ -58,19 +58,19 @@
         vpc_id: "{{ my_vpc.vpc.id }}"
         state: present
         tags:
-          Name: "{{resource_prefix}}-vpc-igw"
+          Name: "{{vpc.igw.name}}"
       register: my_igw
 
     # NAT gateway
     - name: Create nat gateway
       amazon.aws.ec2_vpc_nat_gateway:
         state: present
-        subnet_id: "{{ my_subnet_lut[resource_prefix ~ '-vpc-' ~ vpc.subnets.public[0].name] }}"
+        subnet_id: "{{ my_subnet_lut[vpc.subnets.public[0].name] }}"
         if_exist_do_not_create: yes
         release_eip: true
         region: "{{vpc.region}}"
         tags:
-          Name: "{{resource_prefix}}-vpc-nat-gateway-1"
+          Name: "{{vpc.nat.name}}"
       register: my_nat
 
     # Create route table for IGW and two public subnets
@@ -79,10 +79,10 @@
         vpc_id: "{{ my_vpc.vpc.id }}"
         region: "{{vpc.region}}"
         tags:
-          Name: "{{resource_prefix}}-vpc-public"
+          Name: "{{vpc.igw.route_table.name}}"
         subnets:
-          - "{{ my_subnet_lut[resource_prefix ~ '-vpc-' ~ vpc.subnets.public[0].name] }}"
-          - "{{ my_subnet_lut[resource_prefix ~ '-vpc-' ~ vpc.subnets.public[1].name] }}"
+          - "{{ my_subnet_lut[vpc.subnets.public[0].name] }}"
+          - "{{ my_subnet_lut[vpc.subnets.public[1].name] }}"
         routes:
           - dest: 0.0.0.0/0
             gateway_id: "{{ my_igw.gateway_id }}"
@@ -94,10 +94,10 @@
         vpc_id: "{{ my_vpc.vpc.id }}"
         region: "{{vpc.region}}"
         tags:
-          Name: "{{resource_prefix}}-vpc-private"
+          Name: "{{vpc.nat.route_table.name}}"
         subnets:
-          - "{{ my_subnet_lut[resource_prefix ~ '-vpc-' ~ vpc.subnets.private[0].name] }}"
-          - "{{ my_subnet_lut[resource_prefix ~ '-vpc-' ~ vpc.subnets.private[1].name] }}"
+          - "{{ my_subnet_lut[vpc.subnets.private[0].name] }}"
+          - "{{ my_subnet_lut[vpc.subnets.private[1].name] }}"
         routes:
           - dest: 0.0.0.0/0
             gateway_id: "{{ my_nat.nat_gateway_id }}"
@@ -106,12 +106,12 @@
     # Create VPC security groups
     - name: Create VPC security groups
       amazon.aws.ec2_security_group:
-        name: "{{resource_prefix}}-{{item.name}}"
+        name: "{{item.name}}"
         description: "{{item.description}}"
         vpc_id: "{{ my_vpc.vpc.id }}"
         region: "{{vpc.region}}"
         tags:
-          Name: "{{resource_prefix}}-{{item.name}}"
+          Name: "{{item.name}}"
         rules: "{{item.rules}}"
       with_items:
         - "{{vpc.security_groups.web}}"
@@ -132,7 +132,7 @@
     # Create an ALB target group
     - name: Create target groups with a default health check
       community.aws.elb_target_group:
-        name: "{{resource_prefix}}-{{item.name}}"
+        name: "{{item.name}}"
         protocol: "{{item.protocol}}"
         port: "{{item.port}}"
         vpc_id: "{{ my_vpc.vpc.id }}"
@@ -142,12 +142,12 @@
     # Create application load balancer
     - name: Create ALB and add HTTPS listeners
       amazon.aws.elb_application_lb:
-        name: "{{resource_prefix}}-x-alb"
+        name: "{{vpc.alb.name}}"
         subnets:
-          - "{{ my_subnet_lut[resource_prefix ~ '-vpc-' ~ vpc.subnets.public[0].name] }}"
-          - "{{ my_subnet_lut[resource_prefix ~ '-vpc-' ~ vpc.subnets.public[1].name] }}"
+          - "{{ my_subnet_lut[vpc.subnets.public[0].name] }}"
+          - "{{ my_subnet_lut[vpc.subnets.public[1].name] }}"
         security_groups:
-          - "{{resource_prefix}}-{{vpc.security_groups.web.name}}"
+          - "{{vpc.security_groups.web.name}}"
         region: "{{vpc.region}}"
         listeners:
           - Protocol: "{{item.protocol}}"
@@ -156,7 +156,7 @@
             Certificates: "{{item.certificates}}"
             DefaultActions:
               - Type: forward
-                TargetGroupName: "{{resource_prefix}}-{{item.name}}"
+                TargetGroupName: "{{item.name}}"
         state: present
         purge_listeners: no
       with_items: "{{vpc.alb.target_groups}}"
@@ -166,19 +166,19 @@
 
     - name: Update ALB to include HTTP listeners
       amazon.aws.elb_application_lb:
-        name: "{{resource_prefix}}-x-alb"
+        name: "{{vpc.alb.name}}"
         subnets:
-          - "{{ my_subnet_lut[resource_prefix ~ '-vpc-' ~ vpc.subnets.public[0].name] }}"
-          - "{{ my_subnet_lut[resource_prefix ~ '-vpc-' ~ vpc.subnets.public[1].name] }}"
+          - "{{ my_subnet_lut[vpc.subnets.public[0].name] }}"
+          - "{{ my_subnet_lut[vpc.subnets.public[1].name] }}"
         security_groups:
-          - "{{resource_prefix}}-{{vpc.security_groups.web.name}}"
+          - "{{vpc.security_groups.web.name}}"
         region: "{{vpc.region}}"
         listeners:
           - Protocol: "{{item.protocol}}"
             Port: "{{item.port}}"
             DefaultActions:
               - Type: forward
-                TargetGroupName: "{{resource_prefix}}-{{item.name}}"
+                TargetGroupName: "{{item.name}}"
         state: present
         purge_listeners: no
       with_items: "{{vpc.alb.target_groups}}"
@@ -246,7 +246,7 @@
         key_name: "{{ vpc.ec2.key_pair_name }}"
         image_id: "{{ vpc.ec2.ami }}"
         instance_type: "{{ vpc.ec2.default_instance_type }}"
-        vpc_subnet_id: "{{ my_subnet_lut[resource_prefix ~ '-vpc-' ~ vpc.subnets.public[0].name] }}"
+        vpc_subnet_id: "{{ my_subnet_lut[vpc.subnets.public[0].name] }}"
         #iam_instance_profile: "{{ aws_iam_role_name }}"
         network:
           assign_public_ip: yes
@@ -262,14 +262,14 @@
         key_name: "{{ vpc.ec2.key_pair_name }}"
         image_id: "{{ vpc.ec2.ami }}"
         instance_type: "{{ vpc.ec2.default_instance_type }}"
-        vpc_subnet_id: "{{ my_subnet_lut[resource_prefix ~ '-vpc-' ~ vpc.subnets.private[0].name] }}"
+        vpc_subnet_id: "{{ my_subnet_lut[vpc.subnets.private[0].name] }}"
         #iam_instance_profile: "{{ aws_iam_role_name }}"
         network:
           assign_public_ip: no
         security_groups: "{{ vpc.ec2.swarm_nodes.security_groups }}"
-        tags: "{{ vpc.ec2.swarm_nodes.manager_tags }}"
+        tags: "{{ vpc.ec2.swarm_nodes.managers.tags }}"
         wait: yes
-        exact_count: 1
+        exact_count: "{{vpc.ec2.swarm_nodes.managers.count}}"
       register: swarm_managers
 
     - name: Provision Docker Swarm workers EC2 instances.
@@ -277,14 +277,14 @@
         key_name: "{{ vpc.ec2.key_pair_name }}"
         image_id: "{{ vpc.ec2.ami }}"
         instance_type: "{{ vpc.ec2.default_instance_type }}"
-        vpc_subnet_id: "{{ my_subnet_lut[resource_prefix ~ '-vpc-' ~ vpc.subnets.private[0].name] }}"
+        vpc_subnet_id: "{{ my_subnet_lut[vpc.subnets.private[0].name] }}"
         #iam_instance_profile: "{{ aws_iam_role_name }}"
         network:
           assign_public_ip: no
         security_groups: "{{ vpc.ec2.swarm_nodes.security_groups }}"
-        tags: "{{ vpc.ec2.swarm_nodes.worker_tags }}"
+        tags: "{{ vpc.ec2.swarm_nodes.workers.tags }}"
         wait: yes
-        exact_count: "{{ vpc.ec2.swarm_worker_node_count }}"
+        exact_count: "{{ vpc.ec2.swarm_nodes.workers.count }}"
       register: swarm_workers
 
 #    - debug: var=jump_boxes
@@ -299,7 +299,7 @@
 
     - name: Register targets with ALB target group
       community.aws.elb_target:
-        target_group_name: "{{resource_prefix}}-{{item[1].name}}"
+        target_group_name: "{{item[1].name}}"
         target_id: "{{item[0].instance_id}}"
         state: present
       loop: "{{ (swarm_managers.instances + swarm_workers.instances) | product(vpc.alb.target_groups) | list }}"
