@@ -2,7 +2,7 @@
 - hosts: swarm_manager[0]
   become: true
   vars_files:
-    - ../../server_settings.yml
+    - ../../server/server_settings.yml
     - ../../deploy_settings.yml
 
   tasks:

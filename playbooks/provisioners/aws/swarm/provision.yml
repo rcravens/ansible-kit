@@ -3,7 +3,7 @@
   connection: local
   gather_facts: false
   vars_files:
-    - ../../../../swarm_settings.yml
+    - ../../../../server/swarm_settings.yml
 
   tasks:
     - debug: var=resource_prefix

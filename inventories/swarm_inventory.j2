@@ -13,7 +13,7 @@ swarm_manager:
     ansible_user: ubuntu
     ansible_private_key_file: {{ vpc.ec2.key_pair_local_directory }}{{ vpc.ec2.key_pair_name}}.pem
 
-# This section is only necessary if you are going to use 'kit provision' command to provision and configure your swarm.
+
 swarm_worker:
   hosts:
     {%- for item in swarm_workers.instances %}
