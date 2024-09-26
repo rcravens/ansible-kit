@@ -197,6 +197,7 @@
         type: CNAME
         ttl: 300
         value: "{{my_alb.results[0].dns_name}}"
+        overwrite: yes
 
 
     # Create key pair to create EC2 instances
@@ -291,18 +292,20 @@
 #    - debug: var=swarm_managers
 #    - debug: var=swarm_workers
 
-
-    - name: TEST
-      debug:
-        msg: "instance_id: {{item[0].instance_id}}, tg_name: {{item[1].name}}"
-      loop: "{{ (swarm_managers.instances + swarm_workers.instances) | product(vpc.alb.target_groups) | list }}"
-
     - name: Register targets with ALB target group
       community.aws.elb_target:
         target_group_name: "{{item[1].name}}"
         target_id: "{{item[0].instance_id}}"
         state: present
       loop: "{{ (swarm_managers.instances + swarm_workers.instances) | product(vpc.alb.target_groups) | list }}"
+
+    - name: TEST
+      debug: var=jump_boxes.instances[0].public_ip_address
+
+    - name: Dynamically create inventory file using template.
+      template:
+        src: ../../../../inventories/swarm_inventory.j2
+        dest: ../../../../inventory.yml
 
 #
 #

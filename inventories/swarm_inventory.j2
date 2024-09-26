@@ -1,0 +1,42 @@
+---
+swarm_manager:
+  hosts:
+    {%- for item in swarm_managers.instances %}
+
+    {{ item.private_dns_name }}:
+        ansible_host: {{ item.private_ip_address }}
+        ansible_private_ip: {{ item.private_ip_address }}
+
+    {%- endfor %}
+
+  vars:
+    ansible_user: ubuntu
+    ansible_private_key_file: {{ vpc.ec2.key_pair_local_directory }}{{ vpc.ec2.key_pair_name}}.pem
+
+# This section is only necessary if you are going to use 'kit provision' command to provision and configure your swarm.
+swarm_worker:
+  hosts:
+    {%- for item in swarm_workers.instances %}
+
+    {{ item.private_dns_name }}:
+        ansible_host: {{ item.private_ip_address }}
+
+    {%- endfor %}
+
+  vars:
+    ansible_user: ubuntu
+    ansible_private_key_file: {{ vpc.ec2.key_pair_local_directory }}{{ vpc.ec2.key_pair_name}}.pem
+
+swarm:
+  children:
+    swarm_manager:
+    swarm_workers:
+
+all:
+  children:
+    swarm:
+  vars:
+    jumpbox_host: {{ jump_boxes.instances[0].public_ip_address }}
+    jumpbox_user: ubuntu
+    jumpbox_key_file: {{ vpc.ec2.key_pair_local_directory }}{{ vpc.ec2.key_pair_name}}.pem
+    ansible_ssh_common_args: "-o ProxyCommand='ssh -W %h:%p -i {% raw %}{{jumpbox_key_file}} -q {{jumpbox_user}}@{{jumpbox_host}}{% endraw %}'"
