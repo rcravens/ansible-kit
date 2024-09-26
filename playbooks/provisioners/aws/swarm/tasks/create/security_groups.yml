@@ -11,6 +11,7 @@
     rules: "{{item.rules}}"
   with_items:
     - "{{vpc.security_groups.web}}"
+    - "{{vpc.security_groups.mysql}}"
     - "{{vpc.security_groups.ssh}}"
     - "{{vpc.security_groups.swarm}}"
   register: my_sgs
