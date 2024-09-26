@@ -7,7 +7,42 @@
       group-name: "{{ vpc.security_groups.mysql.name }}"
   register: mysql_sgs
 
-- debug: var=mysql_sgs
+#- debug: var=mysql_sgs
+
+#Gather information about the subnets by their name
+- name: Gather information about the subnets by their name
+  amazon.aws.ec2_vpc_subnet_info:
+    filters:
+      "tag:Name": "{{item}}"
+  loop:
+    - "{{ vpc.subnets.public[0].name }}"
+    - "{{ vpc.subnets.public[1].name }}"
+    - "{{ vpc.subnets.private[0].name }}"
+    - "{{ vpc.subnets.private[1].name }}"
+  register: subnet_info
+
+#- debug: var=subnet_info
+
+#- set_fact:
+#    rds_subnet_group_ids: |-
+#      [
+#      {% for result in subnet_info.results %}
+#        {"{{ result.subnets[0].id }}"}
+#      {% endfor %}
+#      ]
+#- debug: var=rds_subnet_group_ids
+
+- set_fact:
+    rds_subnet_ids: "{{subnet_info | json_query('results[*].subnets[*].id') | flatten }}"
+
+- debug: var=rds_subnet_ids
+
+- name: Create RDS subnet group
+  amazon.aws.rds_subnet_group:
+    state: present
+    name: "{{resource_prefix}}-rds-subnet-group"
+    description: "Subnet group for RDS instances"
+    subnets: "{{rds_subnet_ids}}"
 
 - name: Create an RDS MySQL instance
   amazon.aws.rds_instance:
@@ -16,6 +51,7 @@
     engine: "{{ vpc.rds.engine }}"
     storage_encrypted: "{{ vpc.rds.storage_encrypted }}"
     db_instance_class: "{{ vpc.rds.instance_class }}"
+    db_subnet_group_name: "{{resource_prefix}}-rds-subnet-group"
     username: "{{ vpc.rds.root_username }}"
     password: "{{ vpc.rds.root_password }}"
     allocated_storage: "{{ vpc.rds.allocated_storage }}"
