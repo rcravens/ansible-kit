@@ -1,13 +1,13 @@
 ---
-- debug: var=vpc.rds.password
-
 # Gather information about a security group
+- debug: var=vpc.security_groups.mysql.name
+
 - amazon.aws.ec2_security_group_info:
     filters:
       group-name: "{{ vpc.security_groups.mysql.name }}"
   register: mysql_sgs
 
-- debug: var=mysql_sg
+- debug: var=mysql_sgs
 
 - name: Create an RDS MySQL instance
   amazon.aws.rds_instance:
@@ -20,7 +20,7 @@
     password: "{{ vpc.rds.root_password }}"
     allocated_storage: "{{ vpc.rds.allocated_storage }}"
     vpc_security_group_ids:
-      - "{{ mysql_sgs.security_groups.group_id }}"
+      - "{{ mysql_sgs.security_groups[0].group_id }}"
   register: rds
 
 - debug: var=rds
