@@ -11,6 +11,8 @@
     username: "{{ vpc.rds.root_username }}"
     password: "{{ vpc.rds.root_password }}"
     allocated_storage: "{{ vpc.rds.allocated_storage }}"
+    vpc_security_group_ids:
+      - "{{resource_prefix}}-mysql-sg"
   register: rds
 
 - debug: var=rds
@@ -23,3 +25,5 @@
     name:            "{{ item.name }}"
     state:           present
   with_items: "{{vpc.rds.databases}}"
+  delegate_to: swarm_manager
+  run_once: yes

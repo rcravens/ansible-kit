@@ -30,7 +30,7 @@
           - cron
           - fail2ban
           - software-properties-common
-          - mysql-server
+          - mysql-client-core-8.0
           - python3-minimal
           - python3-pip
           - python3-setuptools
