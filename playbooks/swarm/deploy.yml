@@ -3,6 +3,7 @@
   become: true
   vars_files:
     - ../../server/server_settings.yml
+    - ../../deploy_settings.yml
 
   tasks:
     - name: Create VPC and subnet

@@ -32,14 +32,14 @@
 - debug: var=aws_account_id
 
 - name: Create Docker credentials for ECR access.
-  shell: "aws ecr get-login-password --region {{ aws_region }} | docker login --username AWS --password-stdin {{ aws_account_id }}.dkr.ecr.us-east-1.amazonaws.com"
+  shell: "aws ecr get-login-password --region {{ ecr_aws_region }} | docker login --username AWS --password-stdin {{ ecr_aws_account_id }}.dkr.ecr.us-east-1.amazonaws.com"
   when: is_ecr_login_needed
 
 - name: Deploy or redeploy the stacks to Docker Swarm.
   docker_stack:
     state: present
     name: "{{ item.path | basename | regex_replace(regex, replace) }}"
-    with_registry_auth: "{{ is_ecr_login_needed and (aws_account_id|d(false)) and aws_account_id is defined and (aws_account_id|length > 0) }}"
+    with_registry_auth: "{{ is_ecr_login_needed and (ecr_aws_account_id|d(false)) and ecr_aws_account_id is defined and (ecr_aws_account_id|length > 0) }}"
     compose:
       - "/home/{{ ansible_user }}/stacks/{{ item.path | basename }}"
   loop: "{{ stack_files.files }}"
