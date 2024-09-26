@@ -1,0 +1,43 @@
+---
+
+# Create EC2 instances for Docker Swarm manager
+- name: Provision Docker Swarm manager EC2 instances.
+  amazon.aws.ec2_instance:
+    key_name: "{{ vpc.ec2.key_pair_name }}"
+    image_id: "{{ vpc.ec2.ami }}"
+    instance_type: "{{ vpc.ec2.default_instance_type }}"
+    vpc_subnet_id: "{{ my_subnet_lut[vpc.subnets.private[0].name] }}"
+    #iam_instance_profile: "{{ aws_iam_role_name }}"
+    network:
+      assign_public_ip: no
+    security_groups: "{{ vpc.ec2.swarm_nodes.security_groups }}"
+    tags: "{{ vpc.ec2.swarm_nodes.managers.tags }}"
+    wait: yes
+    exact_count: "{{vpc.ec2.swarm_nodes.managers.count}}"
+  register: swarm_managers
+
+- name: Provision Docker Swarm workers EC2 instances.
+  amazon.aws.ec2_instance:
+    key_name: "{{ vpc.ec2.key_pair_name }}"
+    image_id: "{{ vpc.ec2.ami }}"
+    instance_type: "{{ vpc.ec2.default_instance_type }}"
+    vpc_subnet_id: "{{ my_subnet_lut[vpc.subnets.private[0].name] }}"
+    #iam_instance_profile: "{{ aws_iam_role_name }}"
+    network:
+      assign_public_ip: no
+    security_groups: "{{ vpc.ec2.swarm_nodes.security_groups }}"
+    tags: "{{ vpc.ec2.swarm_nodes.workers.tags }}"
+    wait: yes
+    exact_count: "{{ vpc.ec2.swarm_nodes.workers.count }}"
+  register: swarm_workers
+
+#    - debug: var=jump_boxes
+#    - debug: var=swarm_managers
+#    - debug: var=swarm_workers
+
+- name: Register targets with ALB target group
+  community.aws.elb_target:
+    target_group_name: "{{item[1].name}}"
+    target_id: "{{item[0].instance_id}}"
+    state: present
+  loop: "{{ (swarm_managers.instances + swarm_workers.instances) | product(vpc.alb.target_groups) | list }}"

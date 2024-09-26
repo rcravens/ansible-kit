@@ -1,0 +1,58 @@
+---
+
+# Create an ALB target group
+- name: Create target groups with a default health check
+  community.aws.elb_target_group:
+    name: "{{item.name}}"
+    protocol: "{{item.protocol}}"
+    port: "{{item.port}}"
+    vpc_id: "{{ my_vpc.vpc.id }}"
+    state: present
+  with_items: "{{vpc.alb.target_groups}}"
+
+# Create application load balancer
+- name: Create ALB and add HTTPS listeners
+  amazon.aws.elb_application_lb:
+    name: "{{vpc.alb.name}}"
+    subnets:
+      - "{{ my_subnet_lut[vpc.subnets.public[0].name] }}"
+      - "{{ my_subnet_lut[vpc.subnets.public[1].name] }}"
+    security_groups:
+      - "{{vpc.security_groups.web.name}}"
+    region: "{{vpc.region}}"
+    listeners:
+      - Protocol: "{{item.protocol}}"
+        Port: "{{item.port}}"
+        SslPolicy: "{{item.ssl_policy}}"
+        Certificates: "{{item.certificates}}"
+        DefaultActions:
+          - Type: forward
+            TargetGroupName: "{{item.name}}"
+    state: present
+    purge_listeners: no
+  with_items: "{{vpc.alb.target_groups}}"
+  when:
+    - item.port == 443
+  register: my_alb
+
+- name: Update ALB to include HTTP listeners
+  amazon.aws.elb_application_lb:
+    name: "{{vpc.alb.name}}"
+    subnets:
+      - "{{ my_subnet_lut[vpc.subnets.public[0].name] }}"
+      - "{{ my_subnet_lut[vpc.subnets.public[1].name] }}"
+    security_groups:
+      - "{{vpc.security_groups.web.name}}"
+    region: "{{vpc.region}}"
+    listeners:
+      - Protocol: "{{item.protocol}}"
+        Port: "{{item.port}}"
+        DefaultActions:
+          - Type: forward
+            TargetGroupName: "{{item.name}}"
+    state: present
+    purge_listeners: no
+  with_items: "{{vpc.alb.target_groups}}"
+  when:
+    - item.port != 443
+  register: my_alb

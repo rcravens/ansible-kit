@@ -1,0 +1,94 @@
+---
+# VPC
+- name: Create VPC
+  amazon.aws.ec2_vpc_net:
+    name: "{{vpc.name}}"
+    cidr_block: "{{vpc.cidr}}"
+    region: "{{vpc.region}}"
+    tags:
+      Name: "{{vpc.name}}"
+    state: present
+  register: my_vpc
+
+#    - debug: var=my_vpc
+# VPC subnets
+- name: Create VPC subnets
+  amazon.aws.ec2_vpc_subnet:
+    state: present
+    cidr: "{{item.cidr}}"
+    region: "{{vpc.region}}"
+    az: "{{item.az}}"
+    vpc_id: "{{ my_vpc.vpc.id }}"
+    tags:
+      Name: "{{item.name}}"
+  register: my_subnets
+  with_items:
+    - "{{vpc.subnets.public}}"
+    - "{{vpc.subnets.private}}"
+
+#    - debug: var=my_subnets
+
+- name: Create subnet lookup data
+  set_fact:
+    my_subnet_lut: "{{ my_subnet_lut|default({}) | combine( {item.subnet.tags.Name: item.subnet.id} ) }}"
+  with_items: "{{my_subnets.results}}"
+
+#    - debug: var=my_subnet_lut
+#    - debug: var=my_subnet_lut["{{resource_prefix}}-vpc-{{vpc.subnets.public[0].name}}"]
+#    - name: Get first public subnet id
+#      set_fact:
+#        my_public_subnet_1: "{{ my_subnet_lut[resource_prefix ~ '-vpc-' ~ vpc.subnets.public[0].name] }}"
+
+#    - debug: var=my_public_subnet_1
+
+
+# Internet gateway
+- name: Create internet gateway
+  amazon.aws.ec2_vpc_igw:
+    vpc_id: "{{ my_vpc.vpc.id }}"
+    state: present
+    tags:
+      Name: "{{vpc.igw.name}}"
+  register: my_igw
+
+# NAT gateway
+- name: Create nat gateway
+  amazon.aws.ec2_vpc_nat_gateway:
+    state: present
+    subnet_id: "{{ my_subnet_lut[vpc.subnets.public[0].name] }}"
+    if_exist_do_not_create: yes
+    release_eip: true
+    region: "{{vpc.region}}"
+    tags:
+      Name: "{{vpc.nat.name}}"
+  register: my_nat
+
+# Create route table for IGW and two public subnets
+- name: Create internet gateway route table
+  amazon.aws.ec2_vpc_route_table:
+    vpc_id: "{{ my_vpc.vpc.id }}"
+    region: "{{vpc.region}}"
+    tags:
+      Name: "{{vpc.igw.route_table.name}}"
+    subnets:
+      - "{{ my_subnet_lut[vpc.subnets.public[0].name] }}"
+      - "{{ my_subnet_lut[vpc.subnets.public[1].name] }}"
+    routes:
+      - dest: 0.0.0.0/0
+        gateway_id: "{{ my_igw.gateway_id }}"
+  register: my_public_rt
+
+# Create route table for NAT and two private subnets
+- name: Create NAT gateway route table
+  amazon.aws.ec2_vpc_route_table:
+    vpc_id: "{{ my_vpc.vpc.id }}"
+    region: "{{vpc.region}}"
+    tags:
+      Name: "{{vpc.nat.route_table.name}}"
+    subnets:
+      - "{{ my_subnet_lut[vpc.subnets.private[0].name] }}"
+      - "{{ my_subnet_lut[vpc.subnets.private[1].name] }}"
+    routes:
+      - dest: 0.0.0.0/0
+        gateway_id: "{{ my_nat.nat_gateway_id }}"
+  register: my_private_rt

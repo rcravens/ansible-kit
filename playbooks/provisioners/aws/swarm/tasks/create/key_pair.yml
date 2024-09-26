@@ -1,0 +1,42 @@
+---
+
+# Create key pair to create EC2 instances
+- name: Create a key pair
+  amazon.aws.ec2_key:
+    name: "{{ vpc.ec2.key_pair_name }}"
+    force: false  # If it exists, do not overwrite
+  no_log: true
+  register: my_key_pair
+  ignore_errors: yes # Do not stop the playbook if this fails
+
+- debug: var=my_key_pair
+
+- name: "Saving private key to {{vpc.ec2.key_pair_local_directory}}"
+  ansible.builtin.copy:
+    dest: "{{ vpc.ec2.key_pair_local_directory }}{{ vpc.ec2.key_pair_name}}.pem"
+    content: "{{ my_key_pair['key']['private_key'] }}"
+    mode: '0600'
+    force: false
+  register: my_key_pair_saved
+  when: my_key_pair.changed == true
+  ignore_errors: yes
+
+- name: "Ensure private key exists locally {{ vpc.ec2.key_pair_local_directory }}{{ vpc.ec2.key_pair_name}}.pem."
+  ansible.builtin.stat:
+    path: "{{ vpc.ec2.key_pair_local_directory }}{{ vpc.ec2.key_pair_name}}.pem"
+  register: my_key_pair_file_exists
+
+- name: "Deleting {{ vpc.ec2.key_pair_name }} since it couldn't be saved."
+  amazon.aws.ec2_key:
+    name: "{{ vpc.ec2.key_pair_name }}"
+    state: absent
+  when: not my_key_pair_file_exists.stat.exists or (my_key_pair.changed == true and my_key_pair_saved.changed == false)
+  register: delete_key_pair
+
+- name: "Failed to create key pair"
+  ansible.builtin.fail:
+    msg: >
+      The file {{ vpc.ec2.key_pair_local_directory }}{{ vpc.ec2.key_pair_name}}.pem already exists but the
+      key pair {{ vpc.ec2.key_pair_name }} doesn't exists on AWS.
+      Change either the aws_key_pair_name or the aws_key_pair_local_path
+  when: delete_key_pair.changed == true

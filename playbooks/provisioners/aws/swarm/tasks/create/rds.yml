@@ -1,0 +1,25 @@
+---
+- debug: var=vpc.rds.password
+
+- name: Create an RDS MySQL instance
+  amazon.aws.rds_instance:
+    id: "{{ vpc.rds.id }}"
+    state: present
+    engine: "{{ vpc.rds.engine }}"
+    storage_encrypted: "{{ vpc.rds.storage_encrypted }}"
+    db_instance_class: "{{ vpc.rds.instance_class }}"
+    username: "{{ vpc.rds.root_username }}"
+    password: "{{ vpc.rds.root_password }}"
+    allocated_storage: "{{ vpc.rds.allocated_storage }}"
+  register: rds
+
+- debug: var=rds
+
+- name:  Create MySQL database
+  mysql_db:
+    login_host:      "{{ rds.endpoint.address }}"
+    login_user:      "{{ item.username }}"
+    login_password:  "{{ item.password }}"
+    name:            "{{ item.name }}"
+    state:           present
+  with_items: "{{vpc.rds.databases}}"

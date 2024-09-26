@@ -12,7 +12,7 @@ RUN apk --no-cache add sudo python3 py3-pip openssl ca-certificates sshpass open
 # Install needed python packages
 RUN pip3 install --upgrade pip wheel && \
     pip3 install --upgrade cryptography cffi && \
-    pip3 install boto3 boto botocore netaddr mitogen jmespath&& \
+    pip3 install boto3 boto botocore netaddr mitogen jmespath pymysql&& \
     pip3 install --upgrade pywinrm
 
 # Install ansible

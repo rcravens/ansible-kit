@@ -1,0 +1,16 @@
+---
+# Create VPC security groups
+- name: Create VPC security groups
+  amazon.aws.ec2_security_group:
+    name: "{{item.name}}"
+    description: "{{item.description}}"
+    vpc_id: "{{ my_vpc.vpc.id }}"
+    region: "{{vpc.region}}"
+    tags:
+      Name: "{{item.name}}"
+    rules: "{{item.rules}}"
+  with_items:
+    - "{{vpc.security_groups.web}}"
+    - "{{vpc.security_groups.ssh}}"
+    - "{{vpc.security_groups.swarm}}"
+  register: my_sgs

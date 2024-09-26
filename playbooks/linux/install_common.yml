@@ -30,9 +30,11 @@
           - cron
           - fail2ban
           - software-properties-common
+          - mysql-server
           - python3-minimal
           - python3-pip
           - python3-setuptools
+          - python3-pymysql
           - wget
           - zip
           - awscli

@@ -1,0 +1,17 @@
+---
+
+# Create jump box / bastion server
+- name: Provision jump box / bastion server
+  amazon.aws.ec2_instance:
+    key_name: "{{ vpc.ec2.key_pair_name }}"
+    image_id: "{{ vpc.ec2.ami }}"
+    instance_type: "{{ vpc.ec2.default_instance_type }}"
+    vpc_subnet_id: "{{ my_subnet_lut[vpc.subnets.public[0].name] }}"
+    #iam_instance_profile: "{{ aws_iam_role_name }}"
+    network:
+      assign_public_ip: yes
+    security_groups: "{{ vpc.ec2.jump_box.security_groups }}"
+    tags: "{{ vpc.ec2.jump_box.tags }}"
+    wait: yes
+    exact_count: 1
+  register: jump_boxes
