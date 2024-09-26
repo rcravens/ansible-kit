@@ -15,3 +15,5 @@
     - "{{vpc.security_groups.ssh}}"
     - "{{vpc.security_groups.swarm}}"
   register: my_sgs
+
+- debug: var=my_sgs
