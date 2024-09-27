@@ -59,15 +59,22 @@
       - "{{ mysql_sgs.security_groups[0].group_id }}"
   register: rds
 
-- debug: var=rds
-
-- name:  Create MySQL database
-  mysql_db:
-    login_host:      "{{ rds.endpoint.address }}"
-    login_user:      "{{ item.username }}"
-    login_password:  "{{ item.password }}"
-    name:            "{{ item.name }}"
-    state:           present
-  with_items: "{{vpc.rds.databases}}"
-  delegate_to: swarm_manager
-  run_once: yes
+- set_fact:
+    my_rds: rds
+#- debug: var=rds
+#- debug: var=groups.swarm_manager[0]
+#- debug: var=rds.endpoint.address
+#- debug: var=vpc.rds.root_username
+#- debug: var=vpc.rds.root_password
+#
+#- name:  Create MySQL database
+#  mysql_db:
+#    login_host:      "{{ rds.endpoint.address }}"
+#    login_user:      "{{ vpc.rds.root_username }}"
+#    login_password:  "{{ vpc.rds.root_password }}"
+#    name:            "{{ item.name }}"
+#    state:           present
+#  with_items: "{{vpc.rds.databases}}"
+#  delegate_to: groups.swarm_manager[0]
+#  become: true
+#  run_once: yes

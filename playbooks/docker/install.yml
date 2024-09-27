@@ -23,6 +23,8 @@
           - docker
           - jsondiff
           - netaddr
+          - packaging
+          - boto3
         state: latest
 
     #    - name: Add Docker GPG apt Key
