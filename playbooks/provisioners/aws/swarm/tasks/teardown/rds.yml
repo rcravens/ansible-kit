@@ -1,0 +1,12 @@
+---
+
+- name: Remove the DB instance without a final snapshot
+  amazon.aws.rds_instance:
+    id: "{{ vpc.rds.id }}"
+    state: absent
+    skip_final_snapshot: true
+
+- name: Remove a subnet group
+  community.aws.elasticache_subnet_group:
+    state: absent
+    name: "{{resource_prefix}}-rds-subnet-group"

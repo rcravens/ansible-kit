@@ -1,0 +1,50 @@
+---
+- name: Terminate all the EC2 instances.
+  hosts: localhost
+  gather_facts: false
+  become: true
+  vars_files:
+    - ../../../../server/swarm_settings.yml
+
+  tasks:
+    #    - name: Deleting inventory file.
+    #      ansible.builtin.file:
+    #        path: "../../../inventory"
+    #        state: absent
+
+#    - name: Find all stack files (yml).
+#      ansible.builtin.find:
+#        paths: "../../swarm/stacks"
+#        patterns: "*.yml"
+#        recurse: no  # To find items in subdirectories as well
+#      register: files_to_delete
+#
+#    - debug: var=files_to_delete
+#
+#    - name: Remove all files and folders found
+#      ansible.builtin.file:
+#        path: "{{ item.path }}"
+#        state: absent
+#      loop: "{{ files_to_delete.files }}"
+
+    - name: "Query for existing vpc by name ({{ vpc.name }})"
+      ec2_vpc_net_info:
+        region: "{{ vpc.region }}"
+        filters:
+          "tag:Name": "{{ vpc.name }}"
+      register: my_vpc
+
+    - fail:
+        msg: "No vpc could be located by the name {{ aws_vpc_name }}"
+      when: my_vpc.vpcs | length == 0
+
+    #    - debug: var=my_vpc
+
+    - include_tasks: tasks/teardown/redis.yml
+    - include_tasks: tasks/teardown/rds.yml
+    - include_tasks: tasks/teardown/ec2.yml
+    - include_tasks: tasks/teardown/key_pair.yml
+    - include_tasks: tasks/teardown/security_groups.yml
+    - include_tasks: tasks/teardown/iam_role.yml
+    - include_tasks: tasks/teardown/vpc.yml
+

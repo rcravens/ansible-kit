@@ -1,0 +1,10 @@
+---
+- name: "Deleting {{ vpc.ec2.key_pair_name }} key pair."
+  amazon.aws.ec2_key:
+    name: "{{ vpc.ec2.key_pair_name }}"
+    state: absent
+
+- name: "Deleting {{ vpc.ec2.key_pair_name }} key pair file."
+  ansible.builtin.file:
+    path: "{{ vpc.ec2.key_pair_local_directory }}{{ vpc.ec2.key_pair_name}}.pem"
+    state: absent
