@@ -43,6 +43,5 @@
 
     - name: Dynamically create database file using template.
       include_tasks: "tasks/create/database_info.yml"
-      when: vpc.rds.provision
 
-#- import_playbook: create_databases.yml
+- import_playbook: create_databases.yml

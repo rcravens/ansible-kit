@@ -49,4 +49,7 @@
       - "{{ redis_sgs.security_groups[0].group_id }}"
   register: redis
 
+- debug: var=redis
+- debug: var=redis.elasticache.data.CacheNodes[0].Endpoint.Address
+
 

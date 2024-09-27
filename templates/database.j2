@@ -1,6 +1,11 @@
 ---
 database:
+  engine: "{{ vpc.rds.engine }}"
   host: "{{ rds.endpoint.address }}"
   root_username: "{{ vpc.rds.root_username }}"
   root_password: "{{ vpc.rds.root_password }}"
   db_name: "{{ vpc.rds.db_name }}"
+cache:
+  engine: "{{ vpc.elasticache.engine }}"
+  host: "{{ redis.elasticache.data.CacheNodes[0].Endpoint.Address }}"
+  port: "{{  vpc.elasticache.cache_port }}"
