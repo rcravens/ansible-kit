@@ -1,0 +1,6 @@
+---
+
+- name: Dynamically create inventory file using template.
+  template:
+    src: ../../../../templates/database.j2
+    dest: ../../../../server/database.yml

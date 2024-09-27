@@ -1,0 +1,15 @@
+---
+- hosts: swarm_manager[0]
+  become: true
+  vars_files:
+    - ../../../../server/database.yml
+
+  tasks:
+    - name:  Create MySQL database
+      mysql_db:
+        login_host:      "{{ database.host }}"
+        login_user:      "{{ database.root_username }}"
+        login_password:  "{{ database.root_password }}"
+        name:            "{{ database.db_name }}"
+        state:           present
+      run_once: yes
