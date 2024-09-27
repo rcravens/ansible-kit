@@ -1,13 +1,13 @@
 ---
 
-- name: Delete a target group
-  community.aws.elb_target_group:
-    name: "{{item.name}}"
-    state: absent
-  with_items: "{{vpc.alb.target_groups}}"
-
 # Remove an ALB
 - name: Remove the ALB
   amazon.aws.elb_application_lb:
     name: "{{vpc.alb.name}}"
     state: absent
+
+- name: Delete a target group
+  community.aws.elb_target_group:
+    name: "{{item.name}}"
+    state: absent
+  with_items: "{{vpc.alb.target_groups}}"
