@@ -45,6 +45,6 @@
     - include_tasks: tasks/teardown/ec2.yml
     - include_tasks: tasks/teardown/key_pair.yml
     - include_tasks: tasks/teardown/security_groups.yml
-    - include_tasks: tasks/teardown/iam_role.yml
+    - include_tasks: tasks/teardown/swarm_node_iam_role.yml
     - include_tasks: tasks/teardown/vpc.yml
 
