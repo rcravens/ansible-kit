@@ -50,6 +50,7 @@
     region: "{{ vpc.region }}"
     filters:
       vpc-id: "{{ my_vpc.vpcs[0].vpc_id }}"
+      state: ['available']
   register: existing_nat_gateways
 
 - debug: var=existing_nat_gateways
