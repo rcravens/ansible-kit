@@ -1,12 +1,12 @@
 ---
 - name: "Deleting IAM Role Instance Profile."
   amazon.aws.iam_instance_profile:
-    name: "{{ aws_iam_role_name }}"
+    name: "{{resource_prefix}}-swarm-node-iam-role"
     state: absent
 
 - name: "Deleting IAM Role to allow EC2 access to ECR."
   amazon.aws.iam_role:
-    name: "{{ aws_iam_role_name }}"
+    name: "{{resource_prefix}}-swarm-node-iam-role"
     assume_role_policy_document: "{{ lookup('file', '../../files/iam_role_policy.json') }}"
     description: Allow the EC2 instance to pull Docker images from ECR.
     managed_policies:
