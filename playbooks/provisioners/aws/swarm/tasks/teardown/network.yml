@@ -59,7 +59,7 @@
     state: absent
     region: "{{ vpc.region }}"
     wait: true
-    nat_gateway_id: "{{ item.NatGatewayId }}"
+    nat_gateway_id: "{{ item.nat_gateway_id }}"
     release_eip: true
   register: delete_nat_gateway_result
   loop: "{{ existing_nat_gateways.result }}"
