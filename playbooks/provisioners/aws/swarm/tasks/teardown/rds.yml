@@ -7,6 +7,6 @@
     skip_final_snapshot: true
 
 - name: Remove a subnet group
-  community.aws.elasticache_subnet_group:
+  community.aws.rds_subnet_group:
     state: absent
     name: "{{resource_prefix}}-rds-subnet-group"

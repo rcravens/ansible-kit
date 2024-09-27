@@ -1,21 +1,21 @@
 ---
 - name: "Get a list of VPC peers for this VPC."
   ec2_vpc_peering_info:
-    region: "{{ aws_region }}"
+    region: "{{ vpc.region }}"
     filters:
       requester-vpc-info.vpc-id: "{{ my_vpc.vpcs[0].vpc_id }}"
   register: vpc_peers
 
 - name: "Delete peering connections for this VPC."
   ec2_vpc_peer:
-    region: "{{ aws_region }}"
+    region: "{{ vpc.region }}"
     peering_id: "{{ item.vpc_peering_connection_id }}"
     state: "absent"
   with_items: "{{ vpc_peers.result }}"
 
 - name: "Get a list of route tables for this VPC."
   amazon.aws.ec2_vpc_route_table_info:
-    region: "{{ aws_region }}"
+    region: "{{ vpc.region }}"
     filters:
       vpc-id: "{{ my_vpc.vpcs[0].vpc_id }}"
       association.main: "false"
@@ -33,7 +33,7 @@
 
 - name: "Purge routes and delete the route tables."
   amazon.aws.ec2_vpc_route_table:
-    region: "{{ aws_region }}"
+    region: "{{ vpc.region }}"
     vpc_id: "{{ my_vpc.vpcs[0].vpc_id }}"
     route_table_id: "{{ item }}"
     lookup: "id"
@@ -45,16 +45,33 @@
 
 #- pause: seconds=30
 
+- name: Get nat gateways with specific filter
+  amazon.aws.ec2_vpc_nat_gateway_info:
+    region: "{{ vpc.region }}"
+    filters:
+      vpc-id: "{{ my_vpc.vpcs[0].vpc_id }}"
+  register: existing_nat_gateways
+
+- name: Delete nat gateway using discovered nat gateways from facts module.
+  amazon.aws.ec2_vpc_nat_gateway:
+    state: absent
+    region: "{{ vpc.region }}"
+    wait: true
+    nat_gateway_id: "{{ item.NatGatewayId }}"
+    release_eip: true
+  register: delete_nat_gateway_result
+  loop: "{{ existing_nat_gateways.result }}"
+
 - name: "Delete internet gateways associated with this VPC."
   ec2_vpc_igw:
-    region: "{{ aws_region }}"
+    region: "{{ vpc.region }}"
     vpc_id: "{{ item.vpc_id }}"
     state: "absent"
   with_items: "{{ my_vpc.vpcs }}"
 
 - name: "Get a list of existing subnets for this VPC."
   ec2_vpc_subnet_info:
-    region: "{{ aws_region }}"
+    region: "{{ vpc.region }}"
     filters:
       vpc-id: "{{ my_vpc.vpcs[0].vpc_id }}"
   register: subnet_info
@@ -63,7 +80,7 @@
 
 - name: "Deleting subnets belonging to this VPC."
   ec2_vpc_subnet:
-    region: "{{ aws_region }}"
+    region: "{{ vpc.region }}"
     vpc_id: "{{ my_vpc.vpcs[0].vpc_id }}"
     cidr: "{{ item.cidr_block }}"
     state: "absent"
@@ -71,7 +88,7 @@
 
 - name: "Finally, deleting the VPC."
   ec2_vpc_net:
-    region: "{{ aws_region }}"
+    region: "{{ vpc.region }}"
     name: "{{ aws_vpc_name }}"
     cidr_block: "{{ my_vpc.vpcs[0].cidr_block }}"
     state: "absent"
