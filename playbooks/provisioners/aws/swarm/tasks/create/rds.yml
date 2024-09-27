@@ -23,15 +23,6 @@
 
 #- debug: var=subnet_info
 
-#- set_fact:
-#    rds_subnet_group_ids: |-
-#      [
-#      {% for result in subnet_info.results %}
-#        {"{{ result.subnets[0].id }}"}
-#      {% endfor %}
-#      ]
-#- debug: var=rds_subnet_group_ids
-
 - set_fact:
     rds_subnet_ids: "{{subnet_info | json_query('results[*].subnets[*].id') | flatten }}"
 
@@ -59,22 +50,4 @@
       - "{{ mysql_sgs.security_groups[0].group_id }}"
   register: rds
 
-- set_fact:
-    my_rds: rds
-#- debug: var=rds
-#- debug: var=groups.swarm_manager[0]
-#- debug: var=rds.endpoint.address
-#- debug: var=vpc.rds.root_username
-#- debug: var=vpc.rds.root_password
-#
-#- name:  Create MySQL database
-#  mysql_db:
-#    login_host:      "{{ rds.endpoint.address }}"
-#    login_user:      "{{ vpc.rds.root_username }}"
-#    login_password:  "{{ vpc.rds.root_password }}"
-#    name:            "{{ item.name }}"
-#    state:           present
-#  with_items: "{{vpc.rds.databases}}"
-#  delegate_to: groups.swarm_manager[0]
-#  become: true
-#  run_once: yes
+

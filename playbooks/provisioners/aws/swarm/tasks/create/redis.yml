@@ -1,0 +1,52 @@
+---
+# Gather information about a security group
+- debug: var=vpc.security_groups.redis.name
+
+- amazon.aws.ec2_security_group_info:
+    filters:
+      group-name: "{{ vpc.security_groups.redis.name }}"
+  register: redis_sgs
+
+- debug: var=redis_sgs
+
+#Gather information about the subnets by their name
+- name: Gather information about the subnets by their name
+  amazon.aws.ec2_vpc_subnet_info:
+    filters:
+      "tag:Name": "{{item}}"
+  loop:
+    - "{{ vpc.subnets.public[0].name }}"
+    - "{{ vpc.subnets.public[1].name }}"
+    - "{{ vpc.subnets.private[0].name }}"
+    - "{{ vpc.subnets.private[1].name }}"
+  register: subnet_info
+
+#- debug: var=subnet_info
+
+- set_fact:
+    redis_subnet_ids: "{{subnet_info | json_query('results[*].subnets[*].id') | flatten }}"
+- debug: var=redis_subnet_ids
+
+- name: Create ElastiCache subnet group
+  community.aws.elasticache_subnet_group:
+    state: present
+    name: "{{resource_prefix}}-redis-subnet-group"
+    description: "Subnet group for ElastiCache redis instances"
+    subnets: "{{redis_subnet_ids}}"
+
+- debug: var=vpc.elasticache.name
+
+- name: Create ElastiCache Redis instance
+  community.aws.elasticache:
+    name: "{{ vpc.elasticache.name }}"
+    state: present
+    engine: "{{ vpc.elasticache.engine }}"
+    node_type: "{{ vpc.elasticache.node_type }}"
+    num_nodes: "{{ vpc.elasticache.num_nodes }}"
+    cache_port: "{{ vpc.elasticache.cache_port }}"
+    cache_subnet_group: "{{resource_prefix}}-redis-subnet-group"
+    security_group_ids:
+      - "{{ redis_sgs.security_groups[0].group_id }}"
+  register: redis
+
+
