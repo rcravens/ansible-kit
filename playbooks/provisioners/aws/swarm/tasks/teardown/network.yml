@@ -91,6 +91,6 @@
 - name: "Finally, deleting the VPC."
   ec2_vpc_net:
     region: "{{ vpc.region }}"
-    name: "{{ aws_vpc_name }}"
+    name: "{{ vpc.name }}"
     cidr_block: "{{ my_vpc.vpcs[0].cidr_block }}"
     state: "absent"
