@@ -21,6 +21,9 @@
     - name: Create DNS records for the ALB
       include_tasks: "tasks/create/dns_records.yml"
 
+    - name: Create IAM role for Swarm nodes
+      include_tasks: "tasks/create/swarm_node_iam_role.yml"
+
     - name: Create key pair used to create EC2 instances
       include_tasks: "tasks/create/key_pair.yml"
 
@@ -43,5 +46,3 @@
 
     - name: Dynamically create database file using template.
       include_tasks: "tasks/create/database_info.yml"
-
-- import_playbook: create_databases.yml

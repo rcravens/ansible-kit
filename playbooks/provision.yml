@@ -3,3 +3,4 @@
 
 - import_playbook: configure.yml
 
+- import_playbook: provisioners/aws/swarm/create_databases.yml

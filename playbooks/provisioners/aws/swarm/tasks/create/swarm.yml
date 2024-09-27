@@ -7,7 +7,7 @@
     image_id: "{{ vpc.ec2.ami }}"
     instance_type: "{{ vpc.ec2.default_instance_type }}"
     vpc_subnet_id: "{{ my_subnet_lut[vpc.subnets.private[0].name] }}"
-    #iam_instance_profile: "{{ aws_iam_role_name }}"
+    iam_instance_profile: "{{resource_prefix}}-swarm-node-iam-role"
     network:
       assign_public_ip: no
     security_groups: "{{ vpc.ec2.swarm_nodes.security_groups }}"
@@ -22,7 +22,7 @@
     image_id: "{{ vpc.ec2.ami }}"
     instance_type: "{{ vpc.ec2.default_instance_type }}"
     vpc_subnet_id: "{{ my_subnet_lut[vpc.subnets.private[0].name] }}"
-    #iam_instance_profile: "{{ aws_iam_role_name }}"
+    iam_instance_profile: "{{resource_prefix}}-swarm-node-iam-role"
     network:
       assign_public_ip: no
     security_groups: "{{ vpc.ec2.swarm_nodes.security_groups }}"
