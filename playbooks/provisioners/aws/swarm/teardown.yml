@@ -46,5 +46,6 @@
     - include_tasks: tasks/teardown/key_pair.yml
     - include_tasks: tasks/teardown/security_groups.yml
     - include_tasks: tasks/teardown/swarm_node_iam_role.yml
+    - include_tasks: tasks/teardown/alb.yml
     - include_tasks: tasks/teardown/network.yml
 
