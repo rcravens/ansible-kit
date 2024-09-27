@@ -2,5 +2,5 @@
 
 - name: Dynamically create inventory file using template.
   template:
-    src: ../../../../inventories/swarm_inventory.j2
+    src: ../../../../templates/swarm_inventory.j2
     dest: ../../../../server/inventory.yml

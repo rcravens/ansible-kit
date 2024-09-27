@@ -36,23 +36,7 @@
     - name: Create an RDS MySQL instance
       include_tasks: "tasks/create/rds.yml"
 
-- hosts: swarm_manager[0]
-  become: true
-  vars_files:
-    - ../../../../server/swarm_settings.yml
+    - name: Dynamically create database file using template.
+      include_tasks: "tasks/create/database_info.yml"
 
-  tasks:
-    - debug: var=hostvars['localhost']['rds']
-    - debug: var="{{hostvars['localhost']['rds']}}"
-    - set_fact: rds="{{hostvars['localhost']['rds']}}"
-    - debug: var=rds
-
-    - name:  Create MySQL database
-      mysql_db:
-        login_host:      "{{ rds.endpoint.address}}"
-        login_user:      "{{ vpc.rds.root_username }}"
-        login_password:  "{{ vpc.rds.root_password }}"
-        name:            "{{ item.name }}"
-        state:           present
-      with_items: "{{vpc.rds.databases}}"
-      run_once: yes
+- import_playbook: create_databases.yml
