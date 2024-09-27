@@ -3,7 +3,7 @@
 - name: Remove a subnet group
   community.aws.elasticache_subnet_group:
     state: absent
-    name: "{{ {{resource_prefix}}-redis-subnet-group }}"
+    name: "{{resource_prefix}}-redis-subnet-group }}"
 
 - name: Delete the Redis Elasticache instance
   community.aws.elasticache:
