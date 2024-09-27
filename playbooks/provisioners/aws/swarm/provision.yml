@@ -9,33 +9,33 @@
     - debug: var=resource_prefix
     - debug: var=aws_region
 
-#    - name: Create networking
-#      include_tasks: "tasks/create/network.yml"
-#
-#    - name: Create security groups
-#      include_tasks: "tasks/create/security_groups.yml"
-#
-#    - name: Create ALB
-#      include_tasks: "tasks/create/alb.yml"
-#
-#    - name: Create DNS records for the ALB
-#      include_tasks: "tasks/create/dns_records.yml"
-#
-#    - name: Create key pair used to create EC2 instances
-#      include_tasks: "tasks/create/key_pair.yml"
-#
-#    - name: Create jump box / bastion server
-#      include_tasks: "tasks/create/jump_box.yml"
-#
-#    - name: Create EC2 instances for the Docker swarm manager and workers
-#      include_tasks: "tasks/create/swarm.yml"
-#
-#    - name: Dynamically create inventory file using template.
-#      include_tasks: "tasks/create/inventory_file.yml"
-#
-#    - name: Create an RDS MySQL instance
-#      include_tasks: "tasks/create/rds.yml"
-#      when: vpc.rds.provision
+    - name: Create networking
+      include_tasks: "tasks/create/network.yml"
+
+    - name: Create security groups
+      include_tasks: "tasks/create/security_groups.yml"
+
+    - name: Create ALB
+      include_tasks: "tasks/create/alb.yml"
+
+    - name: Create DNS records for the ALB
+      include_tasks: "tasks/create/dns_records.yml"
+
+    - name: Create key pair used to create EC2 instances
+      include_tasks: "tasks/create/key_pair.yml"
+
+    - name: Create jump box / bastion server
+      include_tasks: "tasks/create/jump_box.yml"
+
+    - name: Create EC2 instances for the Docker swarm manager and workers
+      include_tasks: "tasks/create/swarm.yml"
+
+    - name: Dynamically create inventory file using template.
+      include_tasks: "tasks/create/inventory_file.yml"
+
+    - name: Create an RDS MySQL instance
+      include_tasks: "tasks/create/rds.yml"
+      when: vpc.rds.provision
 
     - name: Create an ElastiCache Redis instance
       include_tasks: "tasks/create/redis.yml"
