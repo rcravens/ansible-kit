@@ -4,3 +4,5 @@
   template:
     src: ../../../../templates/swarm_inventory.j2
     dest: ../../../../server/inventory.yml
+
+- meta: refresh_inventory

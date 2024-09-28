@@ -1,5 +1,7 @@
 ---
 - import_playbook: linux/install_common.yml
+
 - import_playbook: docker/install.yml
+
 - import_playbook: swarm/setup.yml
 
