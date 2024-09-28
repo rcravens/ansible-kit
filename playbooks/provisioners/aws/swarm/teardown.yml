@@ -1,5 +1,5 @@
 ---
-- name: Terminate all the EC2 instances.
+- name: Tear down the swarm architecture
   hosts: localhost
   gather_facts: false
   become: true
@@ -7,26 +7,6 @@
     - ../../../../server/swarm_settings.yml
 
   tasks:
-    #    - name: Deleting inventory file.
-    #      ansible.builtin.file:
-    #        path: "../../../inventory"
-    #        state: absent
-
-#    - name: Find all stack files (yml).
-#      ansible.builtin.find:
-#        paths: "../../swarm/stacks"
-#        patterns: "*.yml"
-#        recurse: no  # To find items in subdirectories as well
-#      register: files_to_delete
-#
-#    - debug: var=files_to_delete
-#
-#    - name: Remove all files and folders found
-#      ansible.builtin.file:
-#        path: "{{ item.path }}"
-#        state: absent
-#      loop: "{{ files_to_delete.files }}"
-
     - name: "Query for existing vpc by name ({{ vpc.name }})"
       ec2_vpc_net_info:
         region: "{{ vpc.region }}"

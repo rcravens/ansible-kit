@@ -8,4 +8,4 @@
       - arn:aws:iam::aws:policy/service-role/AWSAppRunnerServicePolicyForECRAccess
   register: swarm_node_iam_role
 
-- debug: var=swarm_node_iam_role
+#- debug: var=swarm_node_iam_role

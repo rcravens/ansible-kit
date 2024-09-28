@@ -9,7 +9,7 @@
   register: my_key_pair
   ignore_errors: yes # Do not stop the playbook if this fails
 
-- debug: var=my_key_pair
+#- debug: var=my_key_pair
 
 - name: "Saving private key to {{vpc.ec2.key_pair_local_directory}}"
   ansible.builtin.copy:

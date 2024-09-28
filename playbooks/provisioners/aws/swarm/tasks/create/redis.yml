@@ -1,13 +1,13 @@
 ---
 # Gather information about a security group
-- debug: var=vpc.security_groups.redis.name
+#- debug: var=vpc.security_groups.redis.name
 
 - amazon.aws.ec2_security_group_info:
     filters:
       group-name: "{{ vpc.security_groups.redis.name }}"
   register: redis_sgs
 
-- debug: var=redis_sgs
+#- debug: var=redis_sgs
 
 #Gather information about the subnets by their name
 - name: Gather information about the subnets by their name
@@ -25,7 +25,7 @@
 
 - set_fact:
     redis_subnet_ids: "{{subnet_info | json_query('results[*].subnets[*].id') | flatten }}"
-- debug: var=redis_subnet_ids
+#- debug: var=redis_subnet_ids
 
 - name: Create ElastiCache subnet group
   community.aws.elasticache_subnet_group:
@@ -34,7 +34,7 @@
     description: "Subnet group for ElastiCache redis instances"
     subnets: "{{redis_subnet_ids}}"
 
-- debug: var=vpc.elasticache.name
+#- debug: var=vpc.elasticache.name
 
 - name: Create ElastiCache Redis instance
   community.aws.elasticache:
@@ -49,7 +49,7 @@
       - "{{ redis_sgs.security_groups[0].group_id }}"
   register: redis
 
-- debug: var=redis
-- debug: var=redis.elasticache.data.CacheNodes[0].Endpoint.Address
+#- debug: var=redis
+#- debug: var=redis.elasticache.data.CacheNodes[0].Endpoint.Address
 
 

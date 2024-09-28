@@ -1,6 +1,6 @@
 ---
 # Gather information about a security group
-- debug: var=vpc.security_groups.mysql.name
+#- debug: var=vpc.security_groups.mysql.name
 
 - amazon.aws.ec2_security_group_info:
     filters:
@@ -26,7 +26,7 @@
 - set_fact:
     rds_subnet_ids: "{{subnet_info | json_query('results[*].subnets[*].id') | flatten }}"
 
-- debug: var=rds_subnet_ids
+#- debug: var=rds_subnet_ids
 
 - name: Create RDS subnet group
   amazon.aws.rds_subnet_group:

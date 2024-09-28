@@ -5,7 +5,7 @@
       vpc-id: "{{ my_vpc.vpcs[0].vpc_id }}"
   register: ec2_info
 
-- debug: var=ec2_info
+#- debug: var=ec2_info
 
 - name: Terminating instances that were previously launched
   amazon.aws.ec2_instance:

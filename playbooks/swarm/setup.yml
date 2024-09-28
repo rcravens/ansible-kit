@@ -45,7 +45,7 @@
         private_ip_lut: "{{ private_ip_lut | default({})  | combine({item: hostvars[item]['ansible_default_ipv4']['address']}) }}"
       with_items: "{{ groups.all }}"
 
-    - debug: var=private_ip_lut
+#    - debug: var=private_ip_lut
 
     - name: Set Fact - First Swarm Manager Host
       set_fact:
@@ -56,7 +56,7 @@
         all_manager_private_ips: "{{ all_manager_private_ips | default([]) }} + [ '{{ hostvars[item]['ansible_default_ipv4']['address'] }}:2377' ]"
       with_items: "{{ groups.swarm_manager }}"
 
-    - debug: var=all_manager_private_ips
+#    - debug: var=all_manager_private_ips
 
     - name: Joining worker to the swarm
       docker_swarm:

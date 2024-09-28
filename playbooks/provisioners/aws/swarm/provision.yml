@@ -6,8 +6,8 @@
     - ../../../../server/swarm_settings.yml
 
   tasks:
-    - debug: var=resource_prefix
-    - debug: var=aws_region
+#    - debug: var=resource_prefix
+#    - debug: var=aws_region
 
     - name: Create networking
       include_tasks: "tasks/create/network.yml"
