@@ -16,12 +16,3 @@
     exact_count: 1
   register: jump_boxes
 
-
-- name: Accept new ssh fingerprints
-  debug:
-    msg: ssh-keyscan -H "{{ item.private_ip_address }}" >> ~/.ssh/known_hosts
-  with_items: "{{ jump_boxes.instances }}"
-
-- name: Accept new ssh fingerprints
-  shell: ssh-keyscan -H "{{ item.private_ip_address }}" >> ~/.ssh/known_hosts
-  with_items: "{{ jump_boxes.instances }}"
