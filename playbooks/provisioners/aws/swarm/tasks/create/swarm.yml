@@ -41,3 +41,9 @@
     target_id: "{{item[0].instance_id}}"
     state: present
   loop: "{{ (swarm_managers.instances + swarm_workers.instances) | product(vpc.alb.target_groups) | list }}"
+
+
+- name: Accept new ssh fingerprints
+  shell: ssh-keyscan -H {{ item.private_ip_address }} >> ~/.ssh/known_hosts
+  with_items: "{{ swarm_managers.instances + swarm_workers.instances }}"
+  become: yes
