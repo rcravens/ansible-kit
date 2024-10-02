@@ -10,3 +10,4 @@
     ttl: 300
     value: "{{my_alb.results[0].dns_name}}"
     overwrite: yes
+  when: domain is defined
