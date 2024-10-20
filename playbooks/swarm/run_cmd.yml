@@ -4,14 +4,22 @@
   vars_files:
     - ../../server/server_settings.yml
     - ../../deploy_settings.yml
+    - ../../run_cmd.yml
 
   tasks:
     - name: Create Docker credentials for ECR access.
       shell: "aws ecr get-login-password --region {{ ecr_aws_region }} | docker login --username AWS --password-stdin {{ ecr_aws_account_id }}.dkr.ecr.us-east-1.amazonaws.com"
       when: is_ecr_login_needed
 
-#    - name: Pull image, start container, and run command
-#      shell: |
-#        docker run -it 781477923825.dkr.ecr.us-east-1.amazonaws.com/larademo:latest php artisan migrate
-#
-#
+    - debug: var=image
+
+    - debug: var=command
+
+    - name: Pull image, start container, and run command
+      shell: "docker run {{image}} {{command}}"
+      register: cmd_result
+
+    - debug: var=cmd_result
+
+
+

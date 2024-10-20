@@ -5,3 +5,4 @@ inventory.yml
 deploy_settings.yml
 swarm_settings.yml
 database.yml
+run_cmd.yml
