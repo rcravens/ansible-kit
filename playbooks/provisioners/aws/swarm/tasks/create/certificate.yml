@@ -1,0 +1,110 @@
+---
+- name: Create VPC and subnet
+  debug: var=domain
+
+- set_fact:
+    certificate_domain: "{{sub_domain}}.{{domain}}"
+
+- name: Get ACM Certificate
+  debug:
+    msg: "Getting/Creating ACM Certificate for {{ certificate_domain }}"
+
+# If we already have an issued certificate, find it and set it into certificate_arn fact
+- name: Get all ACM certificates
+  shell: aws acm list-certificates --region {{aws_region}} --certificate-statuses ISSUED
+  register: output
+
+#- debug: var=output
+
+- set_fact:
+    certificate_list: "{{ (output.stdout|from_json).CertificateSummaryList }}"
+
+#- debug: var=certificate_list
+
+- name: Iterate through the certificate list
+  set_fact:
+    certificate_arn: "{{ item.CertificateArn }}"
+    certificate_status: "ISSUED"
+  when: item.DomainName == certificate_domain
+  with_items: "{{certificate_list}}"
+
+- debug: var=certificate_arn
+
+# If we already have a pending validation certificate, find it and set it into certificate_arn fact
+- name: Get all ACM certificates
+  shell: aws acm list-certificates --region {{aws_region}} --certificate-statuses PENDING_VALIDATION
+  register: output
+  when: certificate_arn is not defined or certificate_arn == ""
+
+- set_fact:
+    certificate_list: "{{ (output.stdout|from_json).CertificateSummaryList }}"
+  when: certificate_arn is not defined or certificate_arn == ""
+
+- name: Iterate through the certificate list
+  set_fact:
+    certificate_arn: "{{ item.CertificateArn }}"
+    certificate_status: "PENDING_VALIDATION"
+  when: (certificate_arn is not defined or certificate_arn == "") and (item.DomainName == certificate_domain)
+  with_items: "{{certificate_list}}"
+
+- debug: var=certificate_arn
+
+# When we don't have a certificate at all, get a new one
+- name: send ACM request if needed
+  shell: |
+    aws acm request-certificate \
+    --region {{aws_region}} \
+    --validation-method DNS \
+    --domain-name "{{ certificate_domain }}" \
+    --domain-validation-options DomainName="{{ certificate_domain }}",ValidationDomain="{{ domain }}"
+  register: acm
+  when: certificate_arn is not defined or certificate_arn == ""
+
+- debug: var=acm
+
+- set_fact:
+    certificate_arn: "{{ (acm.stdout|from_json).CertificateArn }}"
+    certificate_status: "PENDING_VALIDATION"
+  when: certificate_arn is not defined or certificate_arn == ""
+
+- debug: var=certificate_arn
+
+# If our certificate is PENDING_VALIDATION, get and create the DNS record
+- name: Wait for certificate DNS record to be made available
+  command: aws acm describe-certificate --certificate-arn {{ certificate_arn }} --region {{ aws_region }}
+  register: result
+  retries: 12
+  delay: 10
+  until: (result.stdout|from_json).Certificate.DomainValidationOptions[0].ResourceRecord.Name is defined
+  when: certificate_status == "PENDING_VALIDATION"
+
+- set_fact:
+    certificate_validation: "{{ (result.stdout|from_json).Certificate.DomainValidationOptions[0] }}"
+  when: certificate_status == "PENDING_VALIDATION"
+
+- debug: var=certificate_validation
+
+- name: Create Route53 DNS record for the certificate
+  community.aws.route53:
+    state: present
+    zone: "{{ certificate_validation.ValidationDomain }}"
+    record: "{{ certificate_validation.ResourceRecord.Name }}"
+    type: "{{ certificate_validation.ResourceRecord.Type }}"
+    ttl: 7200
+    value: "{{ certificate_validation.ResourceRecord.Value }}"
+    wait: yes
+  when: certificate_status == "PENDING_VALIDATION"
+
+# Now wait for the certificate to validate itself. This can take some time but it's usually pretty quick
+- name: Wait for certificate to be validated
+  command: aws acm describe-certificate --certificate-arn {{ certificate_arn }} --region {{ aws_region }}
+  register: result
+  retries: 180 # 30 mins. Hopefully it won't take this long!
+  delay: 10
+  until: (result.stdout|from_json).Certificate.Status == "ISSUED"
+  when: certificate_status == "PENDING_VALIDATION"
+
+# Finally, log the certificate
+- name: Print certificate ARN
+  debug:
+    msg: "Certificate ARN for {{ certificate_domain }} is: {{ certificate_arn }}"

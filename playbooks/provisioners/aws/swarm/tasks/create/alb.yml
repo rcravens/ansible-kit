@@ -23,8 +23,9 @@
     listeners:
       - Protocol: "{{item.protocol}}"
         Port: "{{item.port}}"
-        SslPolicy: "{{item.ssl_policy}}"
-        Certificates: "{{item.certificates}}"
+        SslPolicy: "ELBSecurityPolicy-2015-05"
+        Certificates:
+          - CertificateArn: "{{certificate_arn}}"
         DefaultActions:
           - Type: forward
             TargetGroupName: "{{item.name}}"

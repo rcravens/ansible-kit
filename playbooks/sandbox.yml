@@ -1,12 +1,13 @@
 ---
-- hosts: swarm_manager
-  become: true
+- hosts: localhost
+  connection: local
   gather_facts: false
   vars_files:
-    - ../deploy_settings.yml
+    - ./../server/swarm_settings.yml
 
   tasks:
-    - name: Create VPC and subnet
-      debug: var=ansible_ssh_common_args
+
+    - name: Create ALB
+      include_tasks: "provisioners/aws/swarm/tasks/create/dns_host.yml"
 
 

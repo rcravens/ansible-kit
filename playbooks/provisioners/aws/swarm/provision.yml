@@ -15,6 +15,12 @@
     - name: Create security groups
       include_tasks: "tasks/create/security_groups.yml"
 
+    - name: Create DNS Hosted Zone
+      include_tasks: "tasks/create/dns_host.yml"
+
+    - name: Create HTTPS domain certificate
+      include_tasks: "tasks/create/certificate.yml"
+
     - name: Create ALB
       include_tasks: "tasks/create/alb.yml"
 

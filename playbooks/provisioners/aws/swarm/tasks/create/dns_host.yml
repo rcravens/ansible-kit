@@ -1,0 +1,12 @@
+---
+- name: Get Hosted Zone
+  debug:
+    msg: "Getting/Creating Route 53 Hosted Zone for {{ domain }}"
+
+- name: Ensure public zone exists
+  amazon.aws.route53_zone:
+    zone: "{{domain}}"
+    comment: "This is our hosted zone for {{domain}}"
+  register: zone
+
+- debug: var=zone
